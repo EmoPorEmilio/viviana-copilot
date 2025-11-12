@@ -50,6 +50,11 @@ fn move_cursor(dx: i32, dy: i32) -> Result<(i32, i32), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // initialize structured logging (controlled via RUST_LOG or `RUST_LOG=info`)
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet, get_cursor, move_cursor])
@@ -134,7 +139,15 @@ pub fn run() {
                                                 let m = ds.get_mouse();
                                                 (m.coords.0, m.coords.1)
                                             };
-                                            println!("Key0 initial: before=({}, {}), after=({}, {}), delta=({}, {})", x_before, y_before, x_after, y_after, x_after - x_before, y_after - y_before);
+                                            tracing::debug!(
+                                                before_x = x_before,
+                                                before_y = y_before,
+                                                after_x = x_after,
+                                                after_y = y_after,
+                                                delta_x = x_after - x_before,
+                                                delta_y = y_after - y_before,
+                                                "Key0 initial move"
+                                            );
                                         }
                                         Keycode::Key4 | Keycode::Numpad4 => {
                                             // detect shift pressed -> '$'
@@ -262,7 +275,15 @@ pub fn run() {
                                         let m = ds.get_mouse();
                                         (m.coords.0, m.coords.1)
                                     };
-                                    println!("Key0 new: before=({}, {}), after=({}, {}), delta=({}, {})", x_before, y_before, x_after, y_after, x_after - x_before, y_after - y_before);
+                                    tracing::debug!(
+                                        before_x = x_before,
+                                        before_y = y_before,
+                                        after_x = x_after,
+                                        after_y = y_after,
+                                        delta_x = x_after - x_before,
+                                        delta_y = y_after - y_before,
+                                        "Key0 new move"
+                                    );
                                 }
                                 Keycode::Key4 | Keycode::Numpad4 => {
                                     if keys.contains(&Keycode::LShift)
