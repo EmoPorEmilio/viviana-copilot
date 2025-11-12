@@ -23,43 +23,8 @@ function App() {
     };
     requestAnimationFrame(loop);
 
-    // InputCommandManager: listen for H/J/K/L and call move_cursor
-    const keyHandler = async (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      let dx = 0;
-      let dy = 0;
-      let handled = true;
-      switch (key) {
-        case "h":
-          dx = -8;
-          break;
-        case "j":
-          dy = 8;
-          break;
-        case "k":
-          dy = -8;
-          break;
-        case "l":
-          dx = 8;
-          break;
-        default:
-          handled = false;
-      }
-      if (handled) {
-        e.preventDefault();
-        try {
-          const res = (await invoke("move_cursor", { dx, dy })) as any;
-          if (Array.isArray(res) && res.length >= 2) {
-            setPos({ x: Number(res[0]), y: Number(res[1]) });
-          }
-        } catch {
-          // ignore invoke errors
-        }
-      }
-    };
-    window.addEventListener("keydown", keyHandler);
-    // store removal for cleanup
-    (window as any).__input_command_manager_cleanup = () => window.removeEventListener("keydown", keyHandler);
+    // Keyboard movement is handled by the Rust backend's global key thread.
+    // Frontend key handling is intentionally disabled to avoid duplicate moves.
   });
 
   onCleanup(() => {

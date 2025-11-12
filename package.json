@@ -4,11 +4,16 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "tauri": "tauri"
+    "start": "tauri dev",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "web:dev": "vite",
+    "web:start": "vite",
+    "web:build": "vite build",
+    "web:preview": "vite preview"
   },
   "license": "MIT",
   "dependencies": {

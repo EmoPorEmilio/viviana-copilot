@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.zeuss.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+  "beforeDevCommand": "pnpm run web:dev",
   "devUrl": "http://localhost:1422",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"

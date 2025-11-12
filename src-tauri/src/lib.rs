@@ -13,6 +13,20 @@ fn get_cursor() -> Result<(i32, i32), String> {
     Ok((mouse.coords.0, mouse.coords.1))
 }
 
+// Helper: on Windows call SetCursorPos for exact integer positioning.
+#[cfg(target_os = "windows")]
+fn set_cursor_pos(x: i32, y: i32) {
+    use winapi::um::winuser::SetCursorPos;
+    unsafe {
+        SetCursorPos(x, y);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn set_cursor_pos(_x: i32, _y: i32) {
+    // no-op on other platforms; Enigo is used there
+}
+
 #[tauri::command]
 fn move_cursor(dx: i32, dy: i32) -> Result<(i32, i32), String> {
     // read current cursor, compute new position, and set it
@@ -21,9 +35,13 @@ fn move_cursor(dx: i32, dy: i32) -> Result<(i32, i32), String> {
 
     let device_state = DeviceState::new();
     let mouse = device_state.get_mouse();
-    // Use relative movement to avoid DPI/coordinate space mismatches
+    // Use absolute movement based on the current cursor position to avoid
+    // fractional/rounding differences between APIs (improves consistency).
+    let target_x = mouse.coords.0 + dx;
+    let target_y = mouse.coords.1 + dy;
     let mut enigo = Enigo::new();
-    enigo.mouse_move_relative(dx, dy);
+    enigo.mouse_move_to(target_x, target_y);
+    set_cursor_pos(target_x, target_y);
 
     // Query the new position after moving
     let mouse_after = device_state.get_mouse();
@@ -66,17 +84,57 @@ pub fn run() {
                                 if now.duration_since(*last) >= initial_delay {
                                     let mut enigo = Enigo::new();
                                     match k {
-                                        Keycode::H => enigo.mouse_move_relative(-8, 0),
-                                        Keycode::J => enigo.mouse_move_relative(0, 8),
-                                        Keycode::K => enigo.mouse_move_relative(0, -8),
-                                        Keycode::L => enigo.mouse_move_relative(8, 0),
-                                        Keycode::Key0 | Keycode::Numpad0 => {
-                                            let (_, y) = {
+                                        Keycode::H => {
+                                            let (x, y) = {
                                                 let ds = DeviceState::new();
                                                 let m = ds.get_mouse();
                                                 (m.coords.0, m.coords.1)
                                             };
-                                            enigo.mouse_move_to(0, y);
+                                            enigo.mouse_move_to(x - 8, y);
+                                            set_cursor_pos(x - 8, y);
+                                        }
+                                        Keycode::J => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x, y + 8);
+                                            set_cursor_pos(x, y + 8);
+                                        }
+                                        Keycode::K => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x, y - 8);
+                                            set_cursor_pos(x, y - 8);
+                                        }
+                                        Keycode::L => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x + 8, y);
+                                            set_cursor_pos(x + 8, y);
+                                        }
+                                        Keycode::Key0 | Keycode::Numpad0 => {
+                                            let (x_before, y_before) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(0, y_before);
+                                            set_cursor_pos(0, y_before);
+                                            // diagnostic: read back and log delta
+                                            let (x_after, y_after) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            println!("Key0 initial: before=({}, {}), after=({}, {}), delta=({}, {})", x_before, y_before, x_after, y_after, x_after - x_before, y_after - y_before);
                                         }
                                         Keycode::Key4 | Keycode::Numpad4 => {
                                             // detect shift pressed -> '$'
@@ -97,6 +155,7 @@ pub fn run() {
                                                         (m.coords.0, m.coords.1)
                                                     };
                                                     enigo.mouse_move_to(max_x, y);
+                                                    set_cursor_pos(max_x, y);
                                                 }
                                             }
                                         }
@@ -109,10 +168,42 @@ pub fn run() {
                                 if now.duration_since(*last) >= repeat_delay {
                                     let mut enigo = Enigo::new();
                                     match k {
-                                        Keycode::H => enigo.mouse_move_relative(-8, 0),
-                                        Keycode::J => enigo.mouse_move_relative(0, 8),
-                                        Keycode::K => enigo.mouse_move_relative(0, -8),
-                                        Keycode::L => enigo.mouse_move_relative(8, 0),
+                                        Keycode::H => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x - 8, y);
+                                            set_cursor_pos(x - 8, y);
+                                        }
+                                        Keycode::J => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x, y + 8);
+                                            set_cursor_pos(x, y + 8);
+                                        }
+                                        Keycode::K => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x, y - 8);
+                                            set_cursor_pos(x, y - 8);
+                                        }
+                                        Keycode::L => {
+                                            let (x, y) = {
+                                                let ds = DeviceState::new();
+                                                let m = ds.get_mouse();
+                                                (m.coords.0, m.coords.1)
+                                            };
+                                            enigo.mouse_move_to(x + 8, y);
+                                            set_cursor_pos(x + 8, y);
+                                        }
                                         _ => {}
                                     }
                                     *last = now;
@@ -122,17 +213,56 @@ pub fn run() {
                             // newly pressed: trigger immediately and record
                             let mut enigo = Enigo::new();
                             match k {
-                                Keycode::H => enigo.mouse_move_relative(-8, 0),
-                                Keycode::J => enigo.mouse_move_relative(0, 8),
-                                Keycode::K => enigo.mouse_move_relative(0, -8),
-                                Keycode::L => enigo.mouse_move_relative(8, 0),
-                                Keycode::Key0 | Keycode::Numpad0 => {
-                                    let (_, y) = {
+                                Keycode::H => {
+                                    let (x, y) = {
                                         let ds = DeviceState::new();
                                         let m = ds.get_mouse();
                                         (m.coords.0, m.coords.1)
                                     };
-                                    enigo.mouse_move_to(0, y);
+                                    enigo.mouse_move_to(x - 8, y);
+                                    set_cursor_pos(x - 8, y);
+                                }
+                                Keycode::J => {
+                                    let (x, y) = {
+                                        let ds = DeviceState::new();
+                                        let m = ds.get_mouse();
+                                        (m.coords.0, m.coords.1)
+                                    };
+                                    enigo.mouse_move_to(x, y + 8);
+                                    set_cursor_pos(x, y + 8);
+                                }
+                                Keycode::K => {
+                                    let (x, y) = {
+                                        let ds = DeviceState::new();
+                                        let m = ds.get_mouse();
+                                        (m.coords.0, m.coords.1)
+                                    };
+                                    enigo.mouse_move_to(x, y - 8);
+                                    set_cursor_pos(x, y - 8);
+                                }
+                                Keycode::L => {
+                                    let (x, y) = {
+                                        let ds = DeviceState::new();
+                                        let m = ds.get_mouse();
+                                        (m.coords.0, m.coords.1)
+                                    };
+                                    enigo.mouse_move_to(x + 8, y);
+                                    set_cursor_pos(x + 8, y);
+                                }
+                                Keycode::Key0 | Keycode::Numpad0 => {
+                                    let (x_before, y_before) = {
+                                        let ds = DeviceState::new();
+                                        let m = ds.get_mouse();
+                                        (m.coords.0, m.coords.1)
+                                    };
+                                    enigo.mouse_move_to(0, y_before);
+                                    set_cursor_pos(0, y_before);
+                                    let (x_after, y_after) = {
+                                        let ds = DeviceState::new();
+                                        let m = ds.get_mouse();
+                                        (m.coords.0, m.coords.1)
+                                    };
+                                    println!("Key0 new: before=({}, {}), after=({}, {}), delta=({}, {})", x_before, y_before, x_after, y_after, x_after - x_before, y_after - y_before);
                                 }
                                 Keycode::Key4 | Keycode::Numpad4 => {
                                     if keys.contains(&Keycode::LShift)
@@ -151,6 +281,7 @@ pub fn run() {
                                                 (m.coords.0, m.coords.1)
                                             };
                                             enigo.mouse_move_to(max_x, y);
+                                            set_cursor_pos(max_x, y);
                                         }
                                     }
                                 }
