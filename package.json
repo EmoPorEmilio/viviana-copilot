@@ -12,15 +12,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "solid-js": "^1.9.3",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/api": "^2.9.0",
+    "@tauri-apps/plugin-opener": "^2.5.2",
+    "solid-js": "^1.9.10"
   },
   "devDependencies": {
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3",
-    "vite-plugin-solid": "^2.11.0",
-    "@tauri-apps/cli": "^2"
+    "@tauri-apps/cli": "^2.9.2",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.12",
+    "vite-plugin-solid": "^2.11.10"
   },
   "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
 }

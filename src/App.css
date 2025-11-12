@@ -41,6 +41,24 @@
   filter: drop-shadow(0 0 2em #24c8db);
 }
 
+/* Draggable region for frameless Tauri windows */
+.drag-region {
+  height: 32px;
+  -webkit-app-region: drag;
+}
+
+/* Elements that must remain interactive must be excluded from drag */
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.coords {
+  font-size: 48px;
+  font-weight: 700;
+  text-align: center;
+  padding: 2rem;
+}
+
 .row {
   display: flex;
   justify-content: center;
